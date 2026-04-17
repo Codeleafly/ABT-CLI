@@ -16,14 +16,14 @@ export const generateAndroidProject = async (config: AndroidConfig) => {
     'app/src/main/java/' + packagePath,
     'app/src/main/res/layout',
     'app/src/main/res/values',
-    'gradle/wrapper',
+    'app/src/main/res/mipmap-mdpi',
   ];
 
   for (const dir of dirs) {
     await fs.ensureDir(path.join(root, dir));
   }
 
-  // settings.gradle is required for multi-project builds
+  // settings.gradle
   await fs.writeFile(path.join(root, 'settings.gradle'), `
 pluginManagement {
     repositories { google(); mavenCentral(); gradlePluginPortal() }
@@ -36,18 +36,24 @@ rootProject.name = "${config.appName}"
 include ':app'
 `);
 
+  // Root build.gradle (using modern plugins DSL)
   await fs.writeFile(path.join(root, 'build.gradle'), `
-buildscript {
-    repositories { google(); mavenCentral() }
-    dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
+plugins {
+    id 'com.android.application' version '8.5.0' apply false
+    id 'com.android.library' version '8.5.0' apply false
 }
 `);
 
+  // App build.gradle
   await fs.writeFile(path.join(root, 'app/build.gradle'), `
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+}
+
 android {
     namespace '${config.packageName}'
     compileSdk ${config.sdkVersion}
+
     defaultConfig {
         applicationId '${config.packageName}'
         minSdk 24
@@ -55,13 +61,29 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
 }
 `);
 
+  // AndroidManifest.xml
   await fs.writeFile(path.join(root, 'app/src/main/AndroidManifest.xml'), `
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application android:label="${config.appName}">
-        <activity android:name=".MainActivity" android:exported="true">
+    <application
+        android:allowBackup="true"
+        android:label="${config.appName}"
+        android:supportsRtl="true">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -70,5 +92,26 @@ android {
     </application>
 </manifest>`);
 
-  console.log(chalk.green('✔ Accurate Android project structure generated.'));
+  // MainActivity.java
+  await fs.writeFile(path.join(root, 'app/src/main/java/', packagePath, 'MainActivity.java'), `
+package ${config.packageName};
+
+import android.app.Activity;
+import android.os.Bundle;
+
+public class MainActivity extends Activity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+}
+`);
+
+  // Basic styles/strings to avoid build errors
+  await fs.writeFile(path.join(root, 'app/src/main/res/values/strings.xml'), `
+<resources>
+    <string name="app_name">${config.appName}</string>
+</resources>`);
+
+  console.log(chalk.green('✔ Fixed Android project structure generated (AGP 8.5.0 compatibility).'));
 };
