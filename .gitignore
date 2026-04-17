@@ -1,0 +1,20 @@
+# Node.js
+node_modules/
+dist/
+npm-debug.log*
+
+# Android/Java
+build/
+.gradle/
+local.properties
+*.iml
+.idea/
+capture/
+.externalNativeBuild/
+.cxx/
+*.keystore
+!debug.keystore
+
+# OS
+.DS_Store
+Thumbs.db
