@@ -23,12 +23,24 @@ export const generateAndroidProject = async (config: AndroidConfig) => {
     await fs.ensureDir(path.join(root, dir));
   }
 
+  // settings.gradle is required for multi-project builds
+  await fs.writeFile(path.join(root, 'settings.gradle'), `
+pluginManagement {
+    repositories { google(); mavenCentral(); gradlePluginPortal() }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories { google(); mavenCentral() }
+}
+rootProject.name = "${config.appName}"
+include ':app'
+`);
+
   await fs.writeFile(path.join(root, 'build.gradle'), `
 buildscript {
     repositories { google(); mavenCentral() }
     dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
 }
-allprojects { repositories { google(); mavenCentral() } }
 `);
 
   await fs.writeFile(path.join(root, 'app/build.gradle'), `
@@ -58,5 +70,5 @@ android {
     </application>
 </manifest>`);
 
-  console.log(chalk.green('✔ Android project structure generated.'));
+  console.log(chalk.green('✔ Accurate Android project structure generated.'));
 };

@@ -1,6 +1,15 @@
 import { execa } from 'execa';
 import chalk from 'chalk';
 
+export const checkCommand = async (command: string) => {
+  try {
+    await execa(command, ['--version']);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const runCommand = async (command: string, args: string[], options = {}) => {
   console.log(chalk.gray(`> Running: ${command} ${args.join(' ')}`));
   try {
