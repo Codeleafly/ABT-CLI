@@ -107,6 +107,10 @@ public class MainActivity extends Activity {
 }
 `);
 
+  // Detect Android SDK
+  const sdkPath = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || '/usr/lib/android-sdk';
+  await fs.writeFile(path.join(root, 'local.properties'), `sdk.dir=${sdkPath}\n`);
+
   // Basic styles/strings to avoid build errors
   await fs.writeFile(path.join(root, 'app/src/main/res/values/strings.xml'), `
 <resources>

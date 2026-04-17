@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+import path from 'path';
 import chalk from 'chalk';
 import { runCommand, checkCommand } from '../utils/shell.js';
 
@@ -6,6 +8,14 @@ export const buildAndroidProject = async () => {
   
   const hasJava = await checkCommand('java');
   const hasGradle = await checkCommand('gradle');
+  
+  // SDK Validation
+  const localProps = path.join(process.cwd(), 'local.properties');
+  if (!fs.existsSync(localProps)) {
+     console.log(chalk.yellow('⚠ local.properties missing, creating default...'));
+     const sdkPath = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || '/usr/lib/android-sdk';
+     await fs.writeFile(localProps, `sdk.dir=${sdkPath}\n`);
+  }
 
   if (!hasJava) {
     console.log(chalk.cyan('🚀 Java not found. Installing OpenJDK in background...'));
