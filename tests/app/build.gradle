@@ -1,13 +1,27 @@
 
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+}
+
 android {
-    namespace 'com.test.app'
+    namespace 'com.app.test'
     compileSdk 34
+
     defaultConfig {
-        applicationId 'com.test.app'
+        applicationId 'com.app.test'
         minSdk 24
         targetSdk 34
         versionCode 1
         versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 }
