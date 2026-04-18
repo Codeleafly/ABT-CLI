@@ -1,7 +1,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="AbtApp">
+        android:label="SuccessApp">
         <activity
             android:name=".MainActivity"
             android:exported="true">

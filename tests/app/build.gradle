@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.abt.app'
+    namespace 'com.abt.success.app'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.abt.app'
+        applicationId 'com.abt.success.app'
         minSdk 24
         targetSdk 34
         versionCode 1
