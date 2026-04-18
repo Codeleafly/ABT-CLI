@@ -1,25 +1,37 @@
-# ABT-CLI: Modular Android Build System
+# ABT-CLI (BETA v1.2.0) 🚀
 
-A powerful, modular CLI tool for generating and building Android projects with automatic Git integration.
+A professional, modular CLI tool to generate and build full native Android projects with deep structure and advanced configurations.
 
-## Architecture
-- **`src/commands/`**: Logic for CLI commands (generate, build).
-- **`src/utils/`**: Shared utilities (shell execution, git automation).
-- **`src/index.ts`**: Main entry point with interactive UI.
+## 🌟 Core Features
+- **Deep Official Structure**: Generates the exact directory hierarchy used by Android Studio.
+- **Future-Ready SDKs**: Support for **Android 12 (API 31)** through **Android 16+ (API 36/Experimental)**.
+- **Smart Permissions**:
+    - **Categorized Presets**: Easy selection for Camera, Location, Bluetooth (Modern), Storage, and more.
+    - **Custom Input**: Support for manual entry of any custom or experimental permissions.
+- **Optimized Pipeline**: 
+    - **Cached SDK**: Skips redundant downloads if the Android SDK or build tools are already present.
+    - **Auto-Installation**: Automatically downloads and configures the environment on first run.
+- **Native & Libs**: Pre-configured `app/libs` and `app/src/main/cpp` for external libraries and NDK development.
 
-## Features
-- **Modular Design**: Easy to extend with new commands.
-- **Background Builds**: Runs Gradle commands in the background with real-time logging.
-- **Git Automation**: Automatically commits and pushes changes after successful operations.
-- **Interactive UI**: Guided project setup using arrow keys.
+## 🚀 Quick Start
+```bash
+# Start the interactive project generator
+abt generate
 
-## Commands
-- \`abt generate\`: Start the interactive project generator.
-- \`abt build\`: Build the generated Android app.
+# Trigger a manual build (APK & AAB)
+abt build
+```
 
-## Development
-\`\`\`bash
-npm install
-npm run build
-npm run dev
-\`\`\`
+## 📁 Generated Structure
+- `app/src/main/`: Core production code (Java/Kotlin).
+- `app/src/androidTest/` & `test/`: Native UI and Unit testing folders.
+- `app/src/main/res/xml/`: Professional configurations (e.g., network security).
+- `gradle/wrapper/`: Pre-configured Gradle environment.
+
+## 🛠 Tech Stack
+- **Node.js + TypeScript (ESM)**
+- **Gradle 9.x + AGP 8.7.2 + Kotlin 2.0.21**
+- **AndroidX & Material Design 3 Components**
+
+---
+*Note: This tool is currently in BETA. Native binary support (NDK) requires manual uncommenting of the CMake block in `app/build.gradle`.*

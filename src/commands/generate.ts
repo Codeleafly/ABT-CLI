@@ -1,58 +1,73 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chalk from 'chalk';
+import os from 'os';
 
 export interface AndroidConfig {
   appName: string;
   packageName: string;
   sdkVersion: string;
+  language: 'java' | 'kotlin';
+  iconPath?: string;
+  permissions?: string[];
 }
 
 export const generateAndroidProject = async (config: AndroidConfig) => {
   const root = process.cwd();
   const packagePath = config.packageName.replace(/\./g, '/');
   
+  console.log(chalk.blue(`🚀 Generating Advanced Android Project: ${config.appName}`));
+
+  // 1. Clean and Create Folders (Including Native and Libs)
+  const baseDirs = ['app', 'gradle', '.idea', '.gradle'];
+  for (const d of baseDirs) {
+    if (fs.existsSync(path.join(root, d))) await fs.remove(path.join(root, d));
+  }
+
   const dirs = [
+    'app/libs',
+    'app/src/main/cpp', // For Custom Binaries / JNI
     'app/src/main/java/' + packagePath,
+    'app/src/main/kotlin/' + packagePath,
+    'app/src/main/res/drawable',
     'app/src/main/res/layout',
     'app/src/main/res/values',
-    'app/src/main/res/mipmap-mdpi',
+    'app/src/main/res/xml',
+    'gradle/wrapper',
   ];
 
   for (const dir of dirs) {
     await fs.ensureDir(path.join(root, dir));
   }
 
-  // settings.gradle
-  await fs.writeFile(path.join(root, 'settings.gradle'), `
-pluginManagement {
-    repositories { google(); mavenCentral(); gradlePluginPortal() }
-}
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories { google(); mavenCentral() }
-}
-rootProject.name = "${config.appName}"
-include ':app'
-`);
+  // 2. Handle Permissions
+  const defaultPermissions = ['android.permission.INTERNET'];
+  const finalPermissions = Array.from(new Set([...defaultPermissions, ...(config.permissions || [])]));
+  const permissionsXml = finalPermissions.map(p => `    <uses-permission android:name="${p}" />`).join('\n');
 
-  // Root build.gradle (using modern plugins DSL)
+  // 3. Project Files (settings.gradle, build.gradle, etc.)
+  await fs.writeFile(path.join(root, 'settings.gradle'), `rootProject.name = "${config.appName}"\ninclude ':app'\n`);
+  await fs.writeFile(path.join(root, 'gradle.properties'), `android.useAndroidX=true\nandroid.nonTransitiveRClass=true\n`);
+
   await fs.writeFile(path.join(root, 'build.gradle'), `
 plugins {
-    id 'com.android.application' version '8.5.0' apply false
-    id 'com.android.library' version '8.5.0' apply false
+    id 'com.android.application' version '8.7.2' apply false
+    id 'org.jetbrains.kotlin.android' version '2.0.21' apply false
 }
 `);
 
-  // App build.gradle
+  // 4. App-level build.gradle with Libs support
+  const kotlinPlugin = config.language === 'kotlin' ? "id 'org.jetbrains.kotlin.android'" : "";
   await fs.writeFile(path.join(root, 'app/build.gradle'), `
 plugins {
     id 'com.android.application'
+    ${kotlinPlugin}
 }
 
 android {
     namespace '${config.packageName}'
     compileSdk ${config.sdkVersion}
+    compileSdkVersion ${config.sdkVersion}
 
     defaultConfig {
         applicationId '${config.packageName}'
@@ -62,28 +77,25 @@ android {
         versionName "1.0"
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-        }
+    // Support for Custom Binaries (JNI)
+    externalNativeBuild {
+        // cmake { path "src/main/cpp/CMakeLists.txt" }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
-    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar']) // Native Libs support
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
 }
 `);
 
-  // AndroidManifest.xml
-  await fs.writeFile(path.join(root, 'app/src/main/AndroidManifest.xml'), `
+  // 5. AndroidManifest.xml with Permissions
+  await fs.writeFile(path.join(root, 'app/src/main/AndroidManifest.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application
-        android:allowBackup="true"
-        android:label="${config.appName}"
-        android:supportsRtl="true">
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+${permissionsXml}
+    <application android:label="${config.appName}" android:theme="@style/Theme.AppCompat.Light">
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -92,30 +104,18 @@ android {
     </application>
 </manifest>`);
 
-  // MainActivity.java
-  await fs.writeFile(path.join(root, 'app/src/main/java/', packagePath, 'MainActivity.java'), `
-package ${config.packageName};
+  // 6. MainActivity
+  const mainActivityContent = config.language === 'java' 
+    ? `package ${config.packageName};\nimport androidx.appcompat.app.AppCompatActivity;\nimport android.os.Bundle;\n\npublic class MainActivity extends AppCompatActivity {\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n    }\n}`
+    : `package ${config.packageName}\nimport androidx.appcompat.app.AppCompatActivity\nimport android.os.Bundle\n\nclass MainActivity : AppCompatActivity() {\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n    }\n}`;
 
-import android.app.Activity;
-import android.os.Bundle;
+  const sourceDir = config.language === 'java' ? 'java' : 'kotlin';
+  await fs.writeFile(path.join(root, `app/src/main/${sourceDir}/`, packagePath, `MainActivity.${config.language === 'java' ? 'java' : 'kt'}`), mainActivityContent);
 
-public class MainActivity extends Activity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-}
-`);
-
-  // Detect Android SDK
-  const sdkPath = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || '/usr/lib/android-sdk';
+  // SDK detection
+  const homeDir = os.homedir();
+  const sdkPath = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || path.join(homeDir, 'android-sdk');
   await fs.writeFile(path.join(root, 'local.properties'), `sdk.dir=${sdkPath}\n`);
 
-  // Basic styles/strings to avoid build errors
-  await fs.writeFile(path.join(root, 'app/src/main/res/values/strings.xml'), `
-<resources>
-    <string name="app_name">${config.appName}</string>
-</resources>`);
-
-  console.log(chalk.green('✔ Fixed Android project structure generated (AGP 8.5.0 compatibility).'));
+  console.log(chalk.green(`✔ Project generated with Native & Libs support. Permissions added: ${finalPermissions.join(', ')}`));
 };
