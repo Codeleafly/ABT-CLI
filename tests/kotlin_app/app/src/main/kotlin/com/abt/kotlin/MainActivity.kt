@@ -1,5 +1,5 @@
 
-package com.abt.kotlin.test
+package com.abt.kotlin
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 

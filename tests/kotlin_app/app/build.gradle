@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace 'com.abt.kotlin.test'
+    namespace 'com.abt.kotlin'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.abt.kotlin.test'
+        applicationId 'com.abt.kotlin'
         minSdk 24
         targetSdk 34
         versionCode 1
