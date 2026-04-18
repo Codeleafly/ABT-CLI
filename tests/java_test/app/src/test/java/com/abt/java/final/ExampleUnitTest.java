@@ -1,5 +1,5 @@
 
-package com.abt.java.deep;
+package com.abt.java.final;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

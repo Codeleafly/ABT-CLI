@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace 'com.abt.java.deep'
+    namespace 'com.abt.java.final'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.abt.java.deep'
+        applicationId 'com.abt.java.final'
         minSdk 24
         targetSdk 34
         versionCode 1
