@@ -5,11 +5,12 @@ plugins {
 }
 
 android {
-    namespace 'com.abt.java.final'
+    namespace 'com.abt.java.success'
     compileSdk 34
+    compileSdkVersion 34
 
     defaultConfig {
-        applicationId 'com.abt.java.final'
+        applicationId 'com.abt.java.success'
         minSdk 24
         targetSdk 34
         versionCode 1
