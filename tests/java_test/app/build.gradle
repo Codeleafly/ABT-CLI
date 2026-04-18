@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    namespace 'com.abt.optimized'
+    namespace 'com.abt.fast'
     compileSdk 34
     compileSdkVersion 34
 
     defaultConfig {
-        applicationId 'com.abt.optimized'
+        applicationId 'com.abt.fast'
         minSdk 24
         targetSdk 34
         versionCode 1
