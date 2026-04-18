@@ -1,5 +1,5 @@
 
-package com.abt.kotlin.deep;
+package com.abt.kotlin.final;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
