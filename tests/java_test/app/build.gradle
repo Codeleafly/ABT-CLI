@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace 'com.abt.java.test'
+    namespace 'com.abt.java'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.abt.java.test'
+        applicationId 'com.abt.java'
         minSdk 24
         targetSdk 34
         versionCode 1

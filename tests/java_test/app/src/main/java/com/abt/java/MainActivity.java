@@ -1,5 +1,5 @@
 
-package com.abt.java.test;
+package com.abt.java;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
