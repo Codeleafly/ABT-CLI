@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.test.app'
+    namespace 'com.loop.app'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.test.app'
+        applicationId 'com.loop.app'
         minSdk 24
         targetSdk 34
         versionCode 1
