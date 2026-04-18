@@ -46,6 +46,12 @@ abt build
 - `app/src/main/cpp/`: Place your C++ files here for NDK.
 - `gradle/wrapper/`: Pre-configured environment.
 
+## 📁 Project Structure & Branches
+- **`main`**: The stable source for stable releases.
+- **`Beta`**: Testing ground for upcoming features.
+- **`Dev`**: Daily development and bug fixes.
+- **`On_Dev`**: Experimental features (Current Focus).
+
 ## 🛠 Tech Stack
 - **Node.js + TypeScript (ESM)**
 - **Gradle 9.x + AGP 8.7.2 + Kotlin 2.0.21**
