@@ -6,5 +6,5 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories { google(); mavenCentral() }
 }
-rootProject.name = "KotlinFinalApp"
+rootProject.name = "KotlinDeepApp"
 include ':app'
