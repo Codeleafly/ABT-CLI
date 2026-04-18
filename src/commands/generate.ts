@@ -14,11 +14,18 @@ export interface AndroidConfig {
 
 export const generateAndroidProject = async (config: AndroidConfig) => {
   const root = process.cwd();
+  
+  // Validation: Check for Java keywords in package name
+  const keywords = ['final', 'class', 'public', 'private', 'static', 'void', 'package', 'import'];
+  if (keywords.some(k => config.packageName.split('.').includes(k))) {
+    throw new Error(`Invalid package name: "${config.packageName}". It contains a Java keyword.`);
+  }
+
   const packagePath = config.packageName.replace(/\./g, '/');
   
   console.log(chalk.blue(`🚀 Generating Advanced Android Project: ${config.appName}`));
 
-  // 1. Clean and Create Folders (Including Native and Libs)
+  // 1. Clean and Create Folders
   const baseDirs = ['app', 'gradle', '.idea', '.gradle'];
   for (const d of baseDirs) {
     if (fs.existsSync(path.join(root, d))) await fs.remove(path.join(root, d));
@@ -26,7 +33,7 @@ export const generateAndroidProject = async (config: AndroidConfig) => {
 
   const dirs = [
     'app/libs',
-    'app/src/main/cpp', // For Custom Binaries / JNI
+    'app/src/main/cpp',
     'app/src/main/java/' + packagePath,
     'app/src/main/kotlin/' + packagePath,
     'app/src/main/res/drawable',
@@ -45,10 +52,29 @@ export const generateAndroidProject = async (config: AndroidConfig) => {
   const finalPermissions = Array.from(new Set([...defaultPermissions, ...(config.permissions || [])]));
   const permissionsXml = finalPermissions.map(p => `    <uses-permission android:name="${p}" />`).join('\n');
 
-  // 3. Project Files (settings.gradle, build.gradle, etc.)
-  await fs.writeFile(path.join(root, 'settings.gradle'), `rootProject.name = "${config.appName}"\ninclude ':app'\n`);
+  // 3. settings.gradle
+  await fs.writeFile(path.join(root, 'settings.gradle'), `
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "${config.appName}"
+include ':app'
+`);
+
   await fs.writeFile(path.join(root, 'gradle.properties'), `android.useAndroidX=true\nandroid.nonTransitiveRClass=true\n`);
 
+  // 4. Root build.gradle
   await fs.writeFile(path.join(root, 'build.gradle'), `
 plugins {
     id 'com.android.application' version '8.7.2' apply false
@@ -56,7 +82,7 @@ plugins {
 }
 `);
 
-  // 4. App-level build.gradle with Libs support
+  // 5. App build.gradle (CRITICAL: Fixed compileSdkVersion)
   const kotlinPlugin = config.language === 'kotlin' ? "id 'org.jetbrains.kotlin.android'" : "";
   await fs.writeFile(path.join(root, 'app/build.gradle'), `
 plugins {
@@ -67,8 +93,7 @@ plugins {
 android {
     namespace '${config.packageName}'
     compileSdk ${config.sdkVersion}
-    compileSdkVersion ${config.sdkVersion}
-
+    
     defaultConfig {
         applicationId '${config.packageName}'
         minSdk 24
@@ -77,24 +102,32 @@ android {
         versionName "1.0"
     }
 
-    // Support for Custom Binaries (JNI)
-    externalNativeBuild {
-        // cmake { path "src/main/cpp/CMakeLists.txt" }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    ${config.language === 'kotlin' ? "kotlinOptions { jvmTarget = '11' }" : ""}
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar']) // Native Libs support
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
 }
 `);
 
-  // 5. AndroidManifest.xml with Permissions
+  // 6. Manifest & Source Code
+  await fs.writeFile(path.join(root, 'app/src/main/res/xml/network_security_config.xml'), `<?xml version="1.0" encoding="utf-8"?>\n<network-security-config>\n    <base-config cleartextTrafficPermitted="true" />\n</network-security-config>`);
+  
   await fs.writeFile(path.join(root, 'app/src/main/AndroidManifest.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 ${permissionsXml}
-    <application android:label="${config.appName}" android:theme="@style/Theme.AppCompat.Light">
+    <application android:label="${config.appName}" android:theme="@style/Theme.AppCompat.Light" android:networkSecurityConfig="@xml/network_security_config">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -104,7 +137,6 @@ ${permissionsXml}
     </application>
 </manifest>`);
 
-  // 6. MainActivity
   const mainActivityContent = config.language === 'java' 
     ? `package ${config.packageName};\nimport androidx.appcompat.app.AppCompatActivity;\nimport android.os.Bundle;\n\npublic class MainActivity extends AppCompatActivity {\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n    }\n}`
     : `package ${config.packageName}\nimport androidx.appcompat.app.AppCompatActivity\nimport android.os.Bundle\n\nclass MainActivity : AppCompatActivity() {\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n    }\n}`;
@@ -112,10 +144,10 @@ ${permissionsXml}
   const sourceDir = config.language === 'java' ? 'java' : 'kotlin';
   await fs.writeFile(path.join(root, `app/src/main/${sourceDir}/`, packagePath, `MainActivity.${config.language === 'java' ? 'java' : 'kt'}`), mainActivityContent);
 
-  // SDK detection
+  // 8. SDK detection
   const homeDir = os.homedir();
   const sdkPath = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || path.join(homeDir, 'android-sdk');
   await fs.writeFile(path.join(root, 'local.properties'), `sdk.dir=${sdkPath}\n`);
 
-  console.log(chalk.green(`✔ Project generated with Native & Libs support. Permissions added: ${finalPermissions.join(', ')}`));
+  console.log(chalk.green(`✔ Project generated correctly.`));
 };

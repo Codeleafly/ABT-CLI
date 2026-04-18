@@ -1,6 +1,7 @@
-
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application android:label="KotlinDeepApp" android:theme="@style/Theme.KotlinDeepApp" android:networkSecurityConfig="@xml/network_security_config">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application android:label="KotlinSuccess" android:theme="@style/Theme.AppCompat.Light" android:networkSecurityConfig="@xml/network_security_config">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

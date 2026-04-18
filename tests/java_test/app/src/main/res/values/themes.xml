@@ -1,8 +1,0 @@
-
-<resources>
-    <style name="Theme.FastApp" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/white</item>
-    </style>
-</resources>

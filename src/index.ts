@@ -122,8 +122,24 @@ program
   .command('generate')
   .description('Generate Android structure')
   .option('-i, --interactive', 'Run interactively', true)
-  .action(async () => {
-    await runInteractive();
+  .option('-n, --name <name>', 'App Name', 'MyNativeApp')
+  .option('-p, --package <package>', 'Package Name', 'com.abt.native.app')
+  .option('-s, --sdk <version>', 'SDK Version', '34')
+  .option('-l, --language <lang>', 'Language (java/kotlin)', 'kotlin')
+  .action(async (options) => {
+    // If any specific flags are passed (other than default interactive true), skip interactive
+    if (process.argv.length > 3 && !process.argv.includes('-i') && !process.argv.includes('--interactive')) {
+      await generateAndroidProject({
+        appName: options.name,
+        packageName: options.package,
+        sdkVersion: options.sdk,
+        language: options.language,
+        permissions: ['android.permission.INTERNET'] // Default for scripted
+      });
+      await buildAndroidProject();
+    } else {
+      await runInteractive();
+    }
   });
 
 program
