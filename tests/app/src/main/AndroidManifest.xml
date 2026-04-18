@@ -1,9 +1,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:allowBackup="true"
-        android:label="FinalApp"
-        android:supportsRtl="true">
+        android:label="AbtApp">
         <activity
             android:name=".MainActivity"
             android:exported="true">
